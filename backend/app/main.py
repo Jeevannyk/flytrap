@@ -3,7 +3,8 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from .chain import Store
@@ -13,7 +14,7 @@ from .runner import run_scenario
 from .scenarios import SCENARIOS
 
 ADMIN_KEY = os.getenv("FLYTRAP_ADMIN_KEY", "demo-admin")
-STATIC = Path(__file__).resolve().parent.parent / "static"
+FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 app = FastAPI(title="FLYTRAP")
 store = Store(os.getenv("FLYTRAP_DB", ":memory:"))
@@ -30,11 +31,6 @@ def _detail(session_id):
     if not session:
         raise HTTPException(404, "unknown session")
     return {"session": session, "events": store.events(session_id), "chain": store.verify(session_id)}
-
-
-@app.get("/")
-def index():
-    return FileResponse(STATIC / "index.html")
 
 
 @app.get("/api/scenarios")
@@ -89,3 +85,12 @@ def tamper(session_id: str):
 @app.get("/api/evaluate")
 def evaluation():
     return evaluate()
+
+
+# Serve the built React app. Registered last so /api routes take precedence.
+if FRONTEND_DIST.is_dir():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
+else:
+    @app.get("/")
+    def frontend_missing():
+        return PlainTextResponse("Frontend not built. Run: cd frontend && npm install && npm run build")

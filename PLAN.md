@@ -127,7 +127,7 @@ These sources are mostly vendor or practitioner posts, not peer-reviewed. Verify
 | Storage | SQLite | No infra |
 | Audit chain | SHA-256 hash chain (HMAC optional) | Tamper evidence |
 | Credentials | Short-lived scoped tokens (simulated) | Revocation = reject on next call |
-| Frontend | Single HTML file served by FastAPI (built MVP; React + Vite + Tailwind was the original plan) | Simplest thing that shows the timeline |
+| Frontend | React + Vite, built and served by FastAPI | Component-based dashboard |
 | Testing | Pytest | Security and regression tests |
 | Hosting | Run on demo laptop, or Vercel (frontend) + Render/Railway (API) | Deployment link is optional |
 | Demo extras | Phone hotspot, pre-recorded backup video (max 4 minutes per template v2) | Safety net |

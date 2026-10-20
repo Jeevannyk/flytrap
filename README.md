@@ -19,12 +19,21 @@ Full plan, design and pitch notes: [PLAN.md](PLAN.md).
 
 ## Run
 
+Backend is FastAPI (`backend/`), frontend is React + Vite (`frontend/`).
+
 ```
+cd frontend
+npm install
+npm run build                                  # builds frontend/dist, served by FastAPI
+
+cd ../backend
 pip install -r requirements.txt
 python -m uvicorn app.main:app --port 8000     # dashboard at http://localhost:8000
 python -m pytest -q                            # 20 tests
 python -m app.evaluate                         # caught / missed / false-alarm table
 ```
+
+For frontend development with hot reload, keep the backend running and run `npm run dev` in `frontend/` (opens on http://localhost:5173 and forwards `/api` to the backend).
 
 ## Demo (about 80 seconds)
 
@@ -59,14 +68,15 @@ Agent -> Gateway (token check -> decoy tripwire -> egress allowlist) -> Simulate
 
 | File | Role |
 |---|---|
-| `app/gateway.py` | Execution gateway: token check, decoy tripwire, freeze and revoke, egress allowlist |
-| `app/decoys.py` | Per-session decoy generation and touch detection |
-| `app/agent.py` | Simulated prompt-injectable agent |
-| `app/replay.py` | Replay investigator (sentence ablation, with a lexical fallback) |
-| `app/chain.py` | SQLite store and hash-chained audit log |
-| `app/evaluate.py` | Caught, missed and false-alarm measurement |
-| `app/scenarios.py`, `app/tools.py` | Fake company data, attack scenarios and simulated tools |
-| `app/main.py`, `static/index.html` | FastAPI API and dashboard |
+| `backend/app/gateway.py` | Execution gateway: token check, decoy tripwire, freeze and revoke, egress allowlist |
+| `backend/app/decoys.py` | Per-session decoy generation and touch detection |
+| `backend/app/agent.py` | Simulated prompt-injectable agent |
+| `backend/app/replay.py` | Replay investigator (sentence ablation, with a lexical fallback) |
+| `backend/app/chain.py` | SQLite store and hash-chained audit log |
+| `backend/app/evaluate.py` | Caught, missed and false-alarm measurement |
+| `backend/app/scenarios.py`, `backend/app/tools.py` | Fake company data, attack scenarios and simulated tools |
+| `backend/app/main.py` | FastAPI API; serves the built frontend |
+| `frontend/src/` | React dashboard (`App.jsx`, `components/`, `api.js`) |
 
 ## What is real and what is simulated
 
