@@ -2,6 +2,10 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")  # backend/.env; real env vars win
+
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
@@ -9,8 +13,9 @@ from pydantic import BaseModel
 
 from .chain import Store
 from .evaluate import evaluate
+from .llm_agent import LLMError
 from .replay import investigate
-from .runner import run_scenario
+from .runner import AGENTS, run_scenario
 from .scenarios import SCENARIOS
 
 ADMIN_KEY = os.getenv("FLYTRAP_ADMIN_KEY", "demo-admin")
@@ -24,6 +29,7 @@ LIVE = {}  # session_id -> Gateway (lives in memory; resets need it)
 class RunBody(BaseModel):
     scenario: str
     protected: bool = True
+    agent: str = "sim"
 
 
 def _detail(session_id):
@@ -42,7 +48,12 @@ def scenarios():
 def run(body: RunBody):
     if body.scenario not in SCENARIOS:
         raise HTTPException(400, "unknown scenario")
-    session_id, gw, _, _ = run_scenario(store, body.scenario, body.protected)
+    if body.agent not in AGENTS:
+        raise HTTPException(400, "unknown agent")
+    try:
+        session_id, gw, _, _ = run_scenario(store, body.scenario, body.protected, agent=body.agent)
+    except LLMError as e:
+        raise HTTPException(502, f"Live LLM failed: {e}")
     LIVE[session_id] = gw
     return _detail(session_id)
 
@@ -60,7 +71,10 @@ def session(session_id: str):
 @app.post("/api/sessions/{session_id}/investigate")
 def investigate_session(session_id: str):
     _detail(session_id)
-    return investigate(store, session_id)
+    try:
+        return investigate(store, session_id)
+    except LLMError as e:
+        raise HTTPException(502, f"Live LLM failed during replay: {e}")
 
 
 @app.post("/api/sessions/{session_id}/reset")

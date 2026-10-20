@@ -1,6 +1,7 @@
 function summarize(e) {
   const p = e.payload
   const args = (a) => JSON.stringify(a)
+  if (p.tampered) return 'RECORD MODIFIED AFTER LOGGING (original content replaced)'
   switch (e.type) {
     case 'tool_call': return `${p.tool}(${args(p.args)})` + (p.untrusted ? '  [untrusted input]' : '')
     case 'decoy_touch': return `touched ${p.decoy} via ${p.tool}(${args(p.args)})`
@@ -9,7 +10,7 @@ function summarize(e) {
     case 'policy_block': return `${p.rule}: ${p.args.to}`
     case 'replay_result': return p.candidates.map((c) => c.sentence).join(' | ')
     case 'session_end': return `harm completed: ${p.harm_completed}`
-    case 'session_start': return `${p.scenario} (protected: ${p.protected})`
+    case 'session_start': return `${p.scenario} (protected: ${p.protected}, agent: ${p.agent ?? 'sim'})`
     default: return JSON.stringify(p)
   }
 }

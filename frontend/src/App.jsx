@@ -9,6 +9,8 @@ export default function App() {
   const [scenarios, setScenarios] = useState([])
   const [scenario, setScenario] = useState('clean')
   const [isProtected, setIsProtected] = useState(true)
+  const [agent, setAgent] = useState('sim')
+  const [busy, setBusy] = useState(false)
   const [detail, setDetail] = useState(null)
   const [replay, setReplay] = useState(null)
   const [evaluation, setEvaluation] = useState(null)
@@ -20,10 +22,13 @@ export default function App() {
 
   const act = (fn) => async () => {
     setError(null)
+    setBusy(true)
     try {
       await fn()
     } catch (e) {
       setError(e.message)
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -32,7 +37,7 @@ export default function App() {
   const handlers = {
     onRun: act(async () => {
       setReplay(null)
-      setDetail(await api.run(scenario, isProtected))
+      setDetail(await api.run(scenario, isProtected, agent))
     }),
     onInvestigate: act(async () => {
       const result = await api.investigate(sessionId)
@@ -57,6 +62,9 @@ export default function App() {
           setScenario={setScenario}
           isProtected={isProtected}
           setIsProtected={setIsProtected}
+          agent={agent}
+          setAgent={setAgent}
+          busy={busy}
           hasRun={Boolean(detail)}
           {...handlers}
         />

@@ -10,11 +10,11 @@ const post = (path, headers = {}) => request(path, { method: 'POST', headers })
 
 export const api = {
   scenarios: () => request('/scenarios'),
-  run: (scenario, isProtected) =>
+  run: (scenario, isProtected, agent) =>
     request('/run', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scenario, protected: isProtected }),
+      body: JSON.stringify({ scenario, protected: isProtected, agent }),
     }),
   session: (id) => request(`/sessions/${id}`),
   investigate: (id) => post(`/sessions/${id}/investigate`),

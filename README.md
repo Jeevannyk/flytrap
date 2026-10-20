@@ -29,11 +29,25 @@ npm run build                                  # builds frontend/dist, served by
 cd ../backend
 pip install -r requirements.txt
 python -m uvicorn app.main:app --port 8000     # dashboard at http://localhost:8000
-python -m pytest -q                            # 20 tests
+python -m pytest -q                            # 24 tests (no network needed)
 python -m app.evaluate                         # caught / missed / false-alarm table
 ```
 
 For frontend development with hot reload, keep the backend running and run `npm run dev` in `frontend/` (opens on http://localhost:5173 and forwards `/api` to the backend).
+
+## Live LLM agent (Gemini)
+
+The dashboard's **Agent** picker switches between the simulated agent and a live Gemini agent using function calling. Every live tool call still goes through the FLYTRAP gateway.
+
+1. Get a free key at https://aistudio.google.com/apikey.
+2. Copy `backend/.env.example` to `backend/.env` and set `GEMINI_API_KEY`. `backend/.env` is gitignored; never commit a key. An existing `GEMINI_API_KEY` environment variable also works.
+3. Optional: set `GEMINI_MODELS` to a fallback chain, for example `gemini-3.1-flash-lite,gemini-3.5-flash`.
+
+What to expect from a live model:
+- **It may refuse the injection.** In our test run, Gemini 3.1 Flash-Lite ignored the paraphrased injection and completed the invoice task normally, so no decoy fired. That is a fair outcome to show: FLYTRAP is the safety net for when the model does get hijacked.
+- **The free tier gets busy.** HTTP 429 and 503 errors are retried with backoff; a run takes about 30-90 seconds.
+- **Replay on live sessions** re-tests only instruction-like sentences, one run each, to stay within API limits.
+- The evaluation table uses the simulated agent, so its numbers stay reproducible.
 
 ## Demo (about 80 seconds)
 
