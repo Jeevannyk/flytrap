@@ -1,10 +1,5 @@
 """FastAPI app: run scenarios, inspect sessions, investigate, verify, reset."""
-import os
 from pathlib import Path
-
-from dotenv import load_dotenv
-
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")  # backend/.env; real env vars win
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import PlainTextResponse
@@ -12,17 +7,17 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from .chain import Store
+from .config import setting
 from .evaluate import evaluate
 from .llm_agent import LLMError
 from .replay import investigate
 from .runner import AGENTS, run_scenario
 from .scenarios import SCENARIOS
 
-ADMIN_KEY = os.getenv("FLYTRAP_ADMIN_KEY", "demo-admin")
 FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 app = FastAPI(title="FLYTRAP")
-store = Store(os.getenv("FLYTRAP_DB", ":memory:"))
+store = Store(setting("FLYTRAP_DB", ":memory:"))
 LIVE = {}  # session_id -> Gateway (lives in memory; resets need it)
 
 
@@ -79,7 +74,7 @@ def investigate_session(session_id: str):
 
 @app.post("/api/sessions/{session_id}/reset")
 def reset(session_id: str, x_admin_key: str = Header(default="")):
-    if x_admin_key != ADMIN_KEY:
+    if x_admin_key != setting("FLYTRAP_ADMIN_KEY", "demo-admin"):
         raise HTTPException(403, "authorized reset required")
     gw = LIVE.get(session_id)
     if not gw:

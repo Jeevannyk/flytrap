@@ -1,7 +1,7 @@
 """Live LLM agent tests with a mocked Gemini API: no network, no key needed."""
 import pytest
 
-from app import llm_agent
+from app import config, llm_agent
 from app.chain import Store
 from app.llm_agent import GeminiAgent, LLMError
 from app.runner import run_scenario
@@ -30,10 +30,20 @@ def decoy_path(payload):
     return [("read_file", {"path": next(f for f in files if "backup" in f or "keys" in f)})]
 
 
-def test_missing_key_raises_clear_error(monkeypatch):
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+def test_os_env_var_is_ignored_only_dotenv_counts(monkeypatch, tmp_path):
+    monkeypatch.setenv("GEMINI_API_KEY", "key-from-os-environment")
+    env = tmp_path / ".env"
+    env.write_text("GEMINI_API_KEY=\n")
+    monkeypatch.setattr(config, "ENV_FILE", env)
     with pytest.raises(LLMError, match="GEMINI_API_KEY"):
         llm_agent._post("any-model", {})
+
+
+def test_settings_read_from_dotenv_file(monkeypatch, tmp_path):
+    env = tmp_path / ".env"
+    env.write_text("GEMINI_MODELS=model-a,model-b\n")
+    monkeypatch.setattr(config, "ENV_FILE", env)
+    assert GeminiAgent().models == ["model-a", "model-b"]
 
 
 def test_llm_agent_tool_calls_go_through_gateway_and_trip_decoy(monkeypatch):

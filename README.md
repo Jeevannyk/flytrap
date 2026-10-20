@@ -40,8 +40,10 @@ For frontend development with hot reload, keep the backend running and run `npm 
 The dashboard's **Agent** picker switches between the simulated agent and a live Gemini agent using function calling. Every live tool call still goes through the FLYTRAP gateway.
 
 1. Get a free key at https://aistudio.google.com/apikey.
-2. Copy `backend/.env.example` to `backend/.env` and set `GEMINI_API_KEY`. `backend/.env` is gitignored; never commit a key. An existing `GEMINI_API_KEY` environment variable also works.
-3. Optional: set `GEMINI_MODELS` to a fallback chain, for example `gemini-3.1-flash-lite,gemini-3.5-flash`.
+2. Copy `backend/.env.example` to `backend/.env` and set `GEMINI_API_KEY`. `backend/.env` is gitignored; never commit a key.
+3. Optional: set `GEMINI_MODELS` in the same file to a fallback chain, for example `gemini-3.1-flash-lite,gemini-3.5-flash`.
+
+All settings (`GEMINI_API_KEY`, `GEMINI_MODELS`, `FLYTRAP_ADMIN_KEY`) are read **only** from `backend/.env`; OS environment variables are ignored. The file is re-read on each use, so edits to these apply without restarting the server.
 
 What to expect from a live model:
 - **It may refuse the injection.** In our test run, Gemini 3.1 Flash-Lite ignored the paraphrased injection and completed the invoice task normally, so no decoy fired. That is a fair outcome to show: FLYTRAP is the safety net for when the model does get hijacked.

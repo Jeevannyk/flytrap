@@ -2,13 +2,14 @@
 
 Same interface as SimAgent: run(gateway, task). Every tool call still goes through the
 FLYTRAP gateway, so decoys, containment, the allowlist and the audit log are unchanged.
-The key is read from GEMINI_API_KEY (environment or backend/.env), never from code.
+The key is read from GEMINI_API_KEY in backend/.env only, never from code or OS env vars.
 """
 import json
-import os
 import time
 import urllib.error
 import urllib.request
+
+from .config import setting
 
 BASE = "https://generativelanguage.googleapis.com/v1beta"
 DEFAULT_MODELS = "gemini-3.5-flash,gemini-3.1-flash-lite"
@@ -51,9 +52,9 @@ def _declarations(manifest):
 
 
 def _post(model, payload):
-    key = os.getenv("GEMINI_API_KEY")
+    key = setting("GEMINI_API_KEY")
     if not key:
-        raise LLMError("GEMINI_API_KEY is not set. Copy backend/.env.example to backend/.env and add your key.")
+        raise LLMError("GEMINI_API_KEY is empty in backend/.env. Copy backend/.env.example to backend/.env and add your key.")
     req = urllib.request.Request(
         f"{BASE}/models/{model}:generateContent",
         data=json.dumps(payload).encode(),
@@ -70,7 +71,7 @@ def _post(model, payload):
 
 class GeminiAgent:
     def __init__(self, models=None):
-        self.models = models or [m for m in os.getenv("GEMINI_MODELS", DEFAULT_MODELS).split(",") if m]
+        self.models = models or [m for m in setting("GEMINI_MODELS", DEFAULT_MODELS).split(",") if m]
         self.model = None  # pinned after the first successful call
 
     def _generate(self, payload):
