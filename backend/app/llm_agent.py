@@ -14,7 +14,7 @@ from .config import setting
 BASE = "https://generativelanguage.googleapis.com/v1beta"
 DEFAULT_MODELS = "gemini-3.5-flash,gemini-3.1-flash-lite"
 MAX_STEPS = 12
-RETRY_DELAYS = (2, 5)  # seconds to wait before retrying a busy model
+RETRY_DELAYS = (2, 5, 10)  # seconds to wait before retrying a busy model
 
 PARAMS = {
     "read_url": ["url"],

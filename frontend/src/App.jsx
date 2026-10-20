@@ -71,6 +71,7 @@ export default function App() {
   const handlers = {
     onRun: act(async () => {
       setReplay(null)
+      setDetail(null) // so a failed run never shows the previous run's timeline
       setDetail(await api.run(scenario, isProtected, agent))
     }),
     onInvestigate: act(async () => {
